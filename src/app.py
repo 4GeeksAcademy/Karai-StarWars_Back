@@ -3,6 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 import os
 from flask import Flask, request, jsonify, url_for
+from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
@@ -22,7 +23,9 @@ from models import (
 # from models import Person
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 app.url_map.strict_slashes = False
+
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -52,24 +55,57 @@ def sitemap():
 
 
 @app.route("/users", methods=["POST"])
-def post_user():
+def create_user():
+    try:
 
-    user_data = request.json
-    user = User(
-        username=user_data["username"],
-        mail=user_data["mail"],
-        password=user_data["password"],
-    )
-    db.session.add(user)
-    db.session.commit()
+        username = request.json.get('username')
+        mail = request.json.get('mail')
+        password = request.json.get('password')
 
-    response_body = {
-        "username": user.username,
-        "mail": user.mail,
-        "password": user.password,
-    }
+        if  not mail or not password:
+            return jsonify({'error': 'Mail and password are required.'}), 400
+        
+        # existing_username=User.query.filter_by(username=username).first()
+        # if existing_username:
+        #     return jsonify({'error': 'Username already exist.'}), 409
+        
+        existing_mail=User.query.filter_by(mail=mail).first()
+        if existing_mail:
+            return jsonify({'error': 'Mail already exist.'}), 409
+        
+        db_passowrd = bcrypt.generate_password_hash(password).decode('utf-8')
+        new_user = User(username = username, mail = mail, password= db_passowrd)
+        db.session.add(new_user)
+        db.session.commit()
 
-    return jsonify("Created User:", response_body)
+        response_body = {
+            "username": new_user.username,
+            "mail": new_user.mail,
+        }
+
+        return jsonify({"User created successfully": response_body}), 200
+    
+    except Exception as e:
+        return jsonify({'error': 'Error in user creation: ' + str(e)}), 500
+
+@app.route('/token', methods=['POST'])
+def get_token():
+
+    try:
+
+        username = request.json.get('username')
+        mail = request.json.get('mail')
+        password = request.json.get('password')
+
+        if not mail or not password:
+            return({'error': 'Mail and password are required.'})
+        
+        
+        
+
+        
+    except Exception as e:
+        return jsonify({'error': 'Error of autentification: ' + str(e)}), 500
 
 
 @app.route("/users", methods=["GET"])
