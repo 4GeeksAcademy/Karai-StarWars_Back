@@ -116,6 +116,28 @@ def update_user(user_id):
 
     return jsonify("Updated user", new_data)
 
+@app.route("/character", methods=["POST"])
+def post_character():
+
+    characters = Character.query.all()
+
+    character_list = []
+    for char in characters:
+        character_dict = {
+            "id": char.id,
+            "name": char.name,
+            "birth_year": char.birth_year,
+            "eye_color": char.eye_color,
+            "hair_color": char.hair_color,
+            "skin_color": char.skin_color,
+            "gender": char.gender,
+            "height": char.height,
+            "mass": char.mass,
+            "homeworld": char.homeworld,
+        }
+        character_list.append(character_dict)
+
+        return jsonify(character_list)
 
 @app.route("/character", methods=["GET"])
 def get_all_character():
@@ -262,49 +284,44 @@ def get_ship_by_id(ship_id):
     return jsonify(ship_list)
 
 
-@app.route("/users/favorites", methods=["GET"])
-def get_all_favorites():
-    favorite_character = [elem.character_id for elem in Favorite_character.query.all()]
-    favorite_planets = [elem.planet_id for elem in Favorite_planet.query.all()]
-    favorite_ships = [elem.starship_id for elem in Favorite_starship.query.all()]
+@app.route("/favorites/<int:user_id>", methods=["GET"])
+def get_user_favorites(user_id):
+
+    favorite_characters = db.session.query(Favorite_character).filter_by(user_id=user_id).all()    
+    favorite_character_ids = [fav.character_id for fav in favorite_characters]    
+    favorite_planets = db.session.query(Favorite_planet).filter_by(user_id=user_id).all()    
+    favorite_planets_ids = [fav.planet_id for fav in favorite_planets]   
+    favorite_ships = db.session.query(Favorite_starship).filter_by(user_id=user_id).all()    
+    favorite_ships_ids = [fav.starship_id for fav in favorite_ships]   
 
     favorites = {
-        "character": favorite_character,
-        "planets": favorite_planets,
-        "ships": favorite_ships,
+        "character": favorite_character_ids,
+        "planets": favorite_planets_ids,
+        "ships": favorite_ships_ids,
     }
 
     return jsonify(favorites)
 
 
-@app.route('/favorites/character', methods=['POST'])
-def post_favorite_character():
-
-    data = request.json
-    favorite = Favorite_character(character_id = data['character_id'], user_id = data['user_id'])
-    db.session.add(favorite)
-    db.session.commit()
-    # properties_ids = {
-    #     "character_id": favorite.character_id,
-    #     "user_id": favorite.user_id
-    # }
-
-    return jsonify('Favorite character added')
-
-# @app.route('/favorites/planet', methods=['POST'])
-# def post_favorite_planet():
+# @app.route('/favorites/character', methods=['POST'])
+# def post_favorite_character():
 
 #     data = request.json
-
-#     favorite = Planet(planet_id=data['planet_id'], user_id=data['user_id'])
+#     favorite = Favorite_character(character_id = data['character_id'], user_id = data['user_id'])
 #     db.session.add(favorite)
 #     db.session.commit()
-#     # properties_ids = {
-#     #     "character_id": favorite.character_id,
-#     #     "user_id": favorite.user_id
-#     # }
 
-#     return ('Favorite planet added')
+#     return jsonify('Favorite character added')
+
+@app.route('/favorites/planet', methods=['POST'])
+def post_favorite_planet():
+
+    data = request.json
+    favorite = Favorite_planet(planet_id = data['planet_id'], user_id = data['user_id'])
+    db.session.add(favorite)
+    db.session.commit()
+
+    return jsonify('Favorite planet added')
 
 # @app.route('/favorites/ships', methods=['POST'])
 # def post_favorite_ship():
@@ -321,18 +338,18 @@ def post_favorite_character():
 
 #     return ('Favorite character added')
 
-@app.route('/favorites/people/<int:people_id>', methods=['DELETE'])
-def post_favorite_people():
+@app.route('/favorites/character/<int:character_id>', methods=['DELETE'])
+def delete_favorite_character():
 
     return
 
 @app.route('/favorites/planet/<int:favorite_id>', methods=['DELETE'])
-def post_favorite_planet():
+def delete_favorite_planet():
 
     return
 
 @app.route('/favorites/ships/<int:ship_id>', methods=['DELETE'])
-def post_favorite_ship():
+def delete_favorite_ship():
 
     return
 
