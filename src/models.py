@@ -37,7 +37,6 @@ class Character(db.Model):
     gender = db.Column(db.String(250))
     height = db.Column(db.String(250))
     mass = db.Column(db.String(250))
-    homeworld = db.Column(db.String(250))
 
 class Planet(db.Model):
     __tablename__ = 'planet'
@@ -65,7 +64,8 @@ class Starship(db.Model):
     hyperdrive_rating = db.Column(db.String(250))
     length = db.Column(db.String(250))
     manufacturer = db.Column(db.String(250))
-    max_atmospherix_speed = db.Column(db.String(250))
+    passangers = db.Column(db.String(250))
+    starship_class = db.Column(db.String(250))
 
 class Favorite_character(db.Model):
     __tablename__ = 'favorite_character'

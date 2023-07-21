@@ -60,7 +60,7 @@ def upgrade():
     sa.Column('hyperdrive_rating', sa.String(length=250), nullable=True),
     sa.Column('length', sa.String(length=250), nullable=True),
     sa.Column('manufacturer', sa.String(length=250), nullable=True),
-    sa.Column('max_atmospherix_speed', sa.String(length=250), nullable=True),
+    sa.Column('max_atmosphering_speed', sa.String(length=250), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('favorite_character',
