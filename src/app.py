@@ -23,7 +23,6 @@ from models import (
 
 # from models import Person
 app = Flask(__name__)
-CORS(app)
 app.url_map.strict_slashes = False
 
 
@@ -37,6 +36,7 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 MIGRATE = Migrate(app, db)
+CORS(app, redirect=False)
 db.init_app(app)
 setup_admin(app)
 
@@ -84,6 +84,7 @@ def create_user():
         db.session.commit()
 
         response_body = {
+            "user_id": new_user.id,
             "username": new_user.username,
             "mail": new_user.mail,
         }
@@ -137,7 +138,7 @@ def get_token():
         if true_or_false:
             user_id = login_user.id
             access_token = create_access_token(identity=user_id)
-            return jsonify(access_token), 200
+            return jsonify({'token': access_token, 'user_id': user_id}), 200
 
         else:
             return jsonify({"error": "Wrong password"})
@@ -201,6 +202,19 @@ def post_character():
     
     except Exception as e:
         return jsonify({'error': 'Error adding character: ' + str(e)}), 500
+    
+@app.route("/character/<int:character_id>", methods=["DELETE"])
+def delete_character(character_id):
+
+    try: 
+        character = Character.query.get(character_id)
+        db.session.delete(character)
+        db.session.commit()
+
+        return jsonify('Character deleted')
+    
+    except Exception as e:
+        return jsonify({'error': 'Error deleting character: ' + str(e)}), 500
 
     
 
@@ -466,11 +480,10 @@ def get_user_favorites(user_id):
     favorites = {
         "characters": favorite_character_ids,
         "planets": favorite_planets_ids,
-        "ships": favorite_ships_ids,
+        "starships": favorite_ships_ids,
     }
 
     return jsonify(favorites)
-
 
 @app.route('/favorites/character', methods=['POST'])
 def post_favorite_character():
